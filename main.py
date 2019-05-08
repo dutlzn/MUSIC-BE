@@ -44,11 +44,12 @@ global graph
 graph = tf.get_default_graph()
 
 global genres
-genres = {'metal': 0, 'disco': 1, 'classical': 2, 'hiphop': 3, 'jazz': 4, 
-          'country': 5, 'pop': 6, 'blues': 7, 'reggae': 8, 'rock': 9}
+# genres = {'metal': 0, 'disco': 1, 'classical': 2, 'hiphop': 3, 'jazz': 4, 
+#           'country': 5, 'pop': 6, 'blues': 7, 'reggae': 8, 'rock': 9}
+genres = ['metal', 'disco', 'classical', 'hiphop', 'jazz', 'country', 'pop', 'blues', 'reggae', 'rock']
 # print(model.summary())
-
-
+# global result 
+# result = {'genres':'bules'}
 UPLOAD_FOLDER = ''
 ALLOWED_EXTENSIONS = set(['mp3','au','wav'])
 
@@ -77,13 +78,6 @@ def to_melspectrogram(songs, n_fft = 1024, hop_length = 512):
 def hello():
     return jsonify({'text':'Hello World!'})                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
      
-
-#test send info
-class Genres_Info(Resource):
-    def get(self):
-        result = {'genres':'bules'}
-        return jsonify(result)
-api.add_resource(Genres_Info, '/genres_info') # Route_4
 
 #-------------get file----------------------------
 
@@ -121,7 +115,10 @@ def upload_file():
         specs = np.squeeze(np.stack((specs,) * 3, -1))
         print(specs.shape)
         predictions = model.predict(specs)
-        print(predictions[0].shape)
+        index = np.argmax(predictions[0])
+        print(genres[index])
+        global result1 
+        result1 = {'genres': genres[index]}
 
     if file.filename == '':
         print('no selected file')
@@ -132,29 +129,16 @@ def upload_file():
         # filename = file.filename
         # # filename = secure_filename(file.filename) #会过滤中文名字 别加这个比较好 因为加了之后，
         # file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        # print(filename)
-        # signal, sr = librosa.load(filename)
-        # signal = signal[:660000]
-        # window = 0.1
-        # overlap = 0.5
-        # xshape = signal.shape[0]
-        # chunk = int(xshape*window)
-        # offset = int(chunk*(1.-overlap))
-        # # Split the song and create new ones on windows
-        # temp_X = []
-        # spsong = [signal[i:i+chunk] for i in range(0, xshape - chunk + offset, offset)]
-        # temp_X = [s for s in spsong]
-        # # for s in spsong:
-        # #     temp_X.append(s)
-        # specs = to_melspectrogram(temp_X)
-        # specs = np.squeeze(np.stack((specs,) * 3, -1))
-        # print(specs.shape)
-        # predictions = model.predict(specs)
-        # print(np.argmax(predictions[0]))
         return ""
     print("end")
     return 0
 
+#test send info
+class Genres_Info(Resource):
+    def get(self):
+        result = result1
+        return jsonify(result)
+api.add_resource(Genres_Info, '/genres_info') # Route_4
 
 
 
