@@ -5,6 +5,7 @@ import librosa
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt 
+import time
 from collections import OrderedDict
 
 from sklearn.model_selection import train_test_split
@@ -38,7 +39,7 @@ warnings.filterwarnings("ignore", category = FutureWarning)
 
 # load model, pring summary of the model 
 global model 
-model = load_model('./model/nbs_vgg16.h5')
+model = load_model('../model/nbs_vgg16_myself.h5')
 
 global graph
 graph = tf.get_default_graph()
@@ -96,9 +97,10 @@ def upload_file():
     file = request.files['file']
     with graph.as_default():
         filename = file.filename
-        # filename = secure_filename(file.filename) #会过滤中文名字 别加这个比较好 因为加了之后，
+        # # filename = secure_filename(file.filename) #会过滤中文名字 别加这个比较好 因为加了之后，
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         print(filename)
+        time_start = time.time() # start count time
         signal, sr = librosa.load(filename)
         signal = signal[:660000]
         window = 0.1
@@ -116,9 +118,18 @@ def upload_file():
         print(specs.shape)
         predictions = model.predict(specs)
         index = np.argmax(predictions[0])
+        probility = []
+        for i in predictions[0]:
+            a = i/(sum(predictions[0]))
+            a = a * 100
+            a = round(a,2)
+            probility.append(a)
+        time_end = time.time()
+        time_second = round(time_end-time_start,2)
         print(genres[index])
         global result1 
-        result1 = {'genres': genres[index]}
+        result1 = {'genres': genres[index], 'probility': probility, 'time': time_second}
+        os.remove(filename)
 
     if file.filename == '':
         print('no selected file')
